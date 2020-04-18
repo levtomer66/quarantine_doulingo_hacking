@@ -23,9 +23,10 @@ async function startStory() {
 	await sleep(2000);
 	for (let i=0;i<elms["elements"].length; i++) {
 		cur_elm = elms["elements"][i];
-		console.log(i);
-		console.log(cur_elm);
+		// console.log(i);
+		// console.log(cur_elm);
 	 	if (cur_elm["type"] === "LINE" || cur_elm["type"] === "TITLE") {
+	 		console.log(cur_elm["line"]["content"]["text"]);
 		 	await sleepByWords(cur_elm["line"]["content"]["text"]);
 	 		console.log("Clicking cont...");
 		 	document.querySelectorAll("button.continue")[0].click();
@@ -42,6 +43,8 @@ async function startStory() {
 	 		
 	 	}
 	 	else if (cur_elm["type"] === "CHALLENGE_PROMPT") {
+	 		console.log("Skipping prompt... sleeping 500");
+	 		await sleep(500);
 	 		continue;
 	 	}
 	 	else if (cur_elm["type"] === "MATCH") {
@@ -52,6 +55,7 @@ async function startStory() {
 	 			await sleep(500);
 	 			tokens_arr.filter(elem => elem.innerText == cur_elm["fallbackHints"][j]["translation"])[0].click();
 	 		}
+	 		console.log("Challange resolved... continue...");
 	 		await sleep(2000);
 	 		document.querySelectorAll("button.continue")[0].click();
 	 	}
@@ -59,6 +63,7 @@ async function startStory() {
 	 		var ans_arr = Array.from(document.querySelectorAll("div.tappable-phrase"));
 	 		var ans_text = Array.from(cur_elm["transcriptParts"]).filter(elem=>elem.selectable)[cur_elm["correctAnswerIndex"]].text;
 	 		ans_arr.filter(e => e.textContent == ans_text)[0].click();
+	 		console.log("Challange resolved... continue...");
 	 		await sleep(2000);
 	 		document.querySelectorAll("button.continue")[0].click();
 	 	}
@@ -68,6 +73,7 @@ async function startStory() {
 	 			buttons_arr[cur_elm["phraseOrder"][z]].click();
 	 			await sleep(100);
 	 		}
+	 		console.log("Arranging challange resolved, contrinue...");
 	 		await sleep(1000);
 	 		document.querySelectorAll("button.continue")[0].click();
 	 	}
