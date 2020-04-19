@@ -2,15 +2,31 @@
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
- 
 
-async function sleepByWords(text) {
-	var numWords = text.split(" ").length;
-	var numPsiks = (text.match(/,/g) || []).length;
-	var sleepVal = numWords*700 + numPsiks*700;
-	console.log(`Sleeping ${sleepVal}`);
-	await sleep(sleepVal);
+async function sleepByAudioTime(audioSrc, fn) {
+// Create an instance of AudioContext
+	var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+	
+	var proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+	var response = await fetch(proxyUrl + audioSrc);
+	var buffer = await response.arrayBuffer();
+	// Start Request
+	
+	var audioBuffer = await audioContext.decodeAudioData(buffer);
+    var duration = audioBuffer.duration;
+    console.log("The duration is:" + duration + " seconds... sleeping...");
+    await sleep(duration * 1000 + 100);
+	
 }
+
+// async function sleepByWords(text) {
+// 	var numWords = text.split(" ").length;
+// 	var numPsiks = (text.match(/,/g) || []).length;
+// 	var three_dots = (text.match(/\…/g) || []).length;
+// 	var sleepVal = numWords*700 + numPsiks*700 + three_dots*1500;
+// 	console.log(`Sleeping ${sleepVal}`);
+// 	await sleep(sleepVal);
+// }
 
 async function startStory() {
 	await sleep(2000);
@@ -27,9 +43,10 @@ async function startStory() {
 		// console.log(cur_elm);
 	 	if (cur_elm["type"] === "LINE" || cur_elm["type"] === "TITLE") {
 	 		console.log(cur_elm["line"]["content"]["text"]);
-		 	await sleepByWords(cur_elm["line"]["content"]["text"]);
-	 		console.log("Clicking cont...");
-		 	document.querySelectorAll("button.continue")[0].click();
+		 	// await sleepByWords(cur_elm["line"]["content"]["text"]);
+		 	await sleepByAudioTime(cur_elm["line"]["content"]["audio"]["url"]);
+		 	console.log("Clicking cont...");
+	 		document.querySelectorAll("button.continue")[0].click();
 
 	 	}
 	 	else if(cur_elm["type"] === "MULTIPLE_CHOICE" || cur_elm["type"] === "SELECT_PHRASE") {
@@ -98,10 +115,12 @@ async function startStory() {
     var origOpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function() {
         this.addEventListener('load', function() {
-        	if (this.responseText.startsWith("{\"elements")) {
-            	elms = JSON.parse(this.responseText); //whatever the response was
-            	startStory();
-            }
+        	if (this.responseType == '' || this.responseType == 'text') {
+        		if (this.responseText.startsWith("{\"elements")) {
+	            	elms = JSON.parse(this.responseText); //whatever the response was
+	            	startStory();
+	            }
+        	}
         });
         origOpen.apply(this, arguments);
     };
